@@ -1,0 +1,69 @@
+##################################################################################################
+#
+#   NextCloud Reference: https://docs.nextcloud.com/server/latest/admin_manual/installation/example_centos.html
+#
+###############################################################################################################
+---
+-
+  become: true
+  hosts: NextCloudServer
+  vars_files:
+    - php_vars.yml
+    # include php_to_install
+    # include module_to_install
+  tasks:
+    - name: Server Linux Distribution installed
+      debug: msg="Linux Distribution {{  ansible_distribution }} - {{ ansible_distribution_major_version }}"
+
+    - name: PHP version to install
+      debug: msg="PHP Version to Install {{ php_to_install }}"
+ 
+    - name: Install repositorie remi repo
+      dnf:
+        name: "https://rpms.remirepo.net/enterprise/remi-release-8.rpm"
+        state: present
+
+    - name: Install yum-utils
+      dnf:
+        name: yum-utils
+        state: present
+
+    - name: reset php:7.2 using shell command
+      shell:
+        cmd: dnf module reset -y php
+
+    - name: install {{php_to_install}} in shell command
+      shell:
+        cmd: dnf module install {{ php_to_install }} -y
+
+    - name: enable Module php {{php_to_install}} using shell command
+      shell:
+        cmd: dnf module enable {{php_to_install}} -y
+
+    - name: Install php NextCloud pre-requisites
+      yum:
+        name: "{{ module_to_install }}"
+        state: latest
+
+    - name: Install php fpm pre-requisites
+      yum:
+        name: "php-fpm"
+        state: latest
+
+    - name: verify which php is installed
+      shell:
+        cmd: php -m
+      register: php_modules
+
+    - name: print out php modules installed
+      debug: msg="{{ php_modules }}"
+
+    - name: get package version
+      dnf: 
+        list: php
+      register: php_version
+      changed_when: False
+
+    - name: print out php version installed
+      debug: msg="{{ php_version }}"
+

@@ -1,0 +1,86 @@
+---
+-
+  become: true
+  hosts: AnsibleNode2
+  # gather_facts allow to load ansible variables into this playbook
+  gather_facts: yes
+  # var_files allow to define custom variables
+  # var_files: 
+  tasks:
+    - name: Server Linux Distribution installed
+      debug: msg="Linux Distribution {{  ansible_distribution }} - {{ ansible_distribution_major_version }}"
+
+    - name: Remote User
+      debug: msg="Remote User {{ ansible_user }}"
+
+    - name: install yum-utils
+      yum:
+        name: yum-utils
+        state: present
+
+    - name: Add docker repo
+      get_url:
+        url: "https://download.docker.com/linux/centos/docker-ce.repo"
+        dest: "/etc/yum.repos.d/docker-ce.repo"
+
+    - name: Enable Docker Edge repo
+      ini_file:
+        dest: "/etc/yum.repos.d/docer-ce.repo"
+        section: 'docker-ce-edge'
+        option: enabled
+        value: "0"
+        
+    - name: Enable Docker Test repo
+      ini_file:
+        dest: "/etc/yum.repos.d/docer-ce.repo"
+        section: 'docker-ce-test'
+        option: enabled
+        value: "0"
+
+    - name: Install Docker
+      package:
+        name: docker-ce
+        state: latest
+
+    - name: Start Docker service
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: install docker-compose
+      get_url:
+        url: "https://github.com/docker/compose/releases/download/1.25.1-rc1/docker-compose-Linux-x86_64"
+        dest: "/usr/local/bin/docker-compose"
+        mode: "u+x,g+x,a+x"
+
+    - name: "Create docker user"
+      user:
+         name: docker
+         state: present
+         group: docker
+
+    - name: "Add user {{ ansible_user }} to docker group"
+      user:
+        name: "vagrant"
+        groups: docker
+        append: yes
+
+    - name: Clone docker-compose from project repository
+      git:
+        # name: clone
+        repo: "https://github.com/pablitott/nextcloud.git"
+        dest: "/home/vagrant/docker"
+        recursive: yes
+        clone: yes
+
+
+    # - name: Create task to execute docker-compose-start.sh
+    #   shell:
+    #     cmd: source ./dps.sh
+    #     chdir: "/home/{{ansible_user}}/docker"
+
+    # - name: Create task to execute docker-compose-start.sh
+    #   shell:
+    #     cmd: ./docker-compose-start.sh up local
+    #     chdir: "/home/{{ansible_user}}/docker"

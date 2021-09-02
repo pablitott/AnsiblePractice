@@ -1,0 +1,114 @@
+---
+-
+  become: true
+  hosts: NextCloudServer
+  tasks:
+    - name: Server Linux Distribution installed
+      debug: msg="{{  ansible_distribution }} - {{ ansible_distribution_major_version }}"
+    - name:
+      debug: msg="Ansible Major Distribution:{{ ansible_distribution_major_version }}"
+    - name: verify which php is installed
+      register: yum_package
+      yum:
+        list: php-modules
+    - name: print out packages installed
+      debug: msg="Package installed {{ yum_package }}"
+    - name: Install php NextCloud pre-requisites
+      yum:
+        name: "{{ item }}"
+        state: latest
+      with_items:
+        - yum-utils
+        - epel-release
+    - name: Install repositories epel and remi repo
+      dnf:
+        name: "{{ item }}"
+        state: present
+      with_items:
+      - https://dl.fedoraproject.org/pub/epel/epel-release-latest-{{ ansible_distribution_major_version }}.noarch.rpm
+      - http://rpms.famillecollet.com/enterprise/remi-release-{{ ansible_distribution_major_version }}.rpm
+
+    - name: List modules php:remi-7.4 using shell command
+      shell:
+        cmd: dnf module list php -y
+        # this command must be run in a shell because 
+        # command_warnings: False
+
+    - name: reset php:7.2 using shell command
+      shell:
+        cmd: dnf module reset -y php
+        # this command must be run in a shell because 
+        # command_warnings: False
+
+    - name: enable Module php 7.4 using shell command
+      shell:
+        cmd: dnf module enable -y php:7.4
+        # enablerepo: php:7.4
+
+    - name: install php from php-7.4 repo remi ans epel
+      yum:
+        name: php
+        state: latest
+
+    - name: install php modules version 7.4
+      yum:
+        name: "{{ item }}"
+        state: present
+      with_items:
+      - php
+      - php-ctype
+      - php-curl
+      - php-dom
+      - php-fpm     # required only for magela  and FreeBSD
+      - php-gd
+      - php-hash    # Only fro FreeBSD
+      - php-iconv
+      - php-json
+      - php-libxml
+      - php-mbstring
+      - php-openssl
+      - php-posix
+      - php-session
+      - php-simplexml
+      - php-xmlreader
+      - php-xmlwriter
+      - php-zip
+      - php-zlib
+      - php-bcmath
+      - php-fileinfo
+      - php-gmp
+      - php-xml
+      - php-pdo_mysql       # for MariaDB and MySql
+      - epel-release        # pre-requisite for imagick
+      # recomended packages
+      - php-bz2             #   (recommended, required for extraction of apps)
+      - php-intl            #  (increases language translation performance and fixes sorting of non-ASCII characters)
+      # - php-smbclient     # (SMB/CIFS integration, see SMB/CIFS)   
+                            ## Can't be installed with this method
+      - php-apcu >= 4.0.6   # For enhanced server performance (optional) select one of the following memcaches:
+      # Not recomended
+      - php-pdo_sqlite >= 3  # not recomended for performance reasons
+      # - php-imagick        # follow the instructions on 
+                             # https://docs.nextcloud.com/server/latest/admin_manual/installation/example_centos.html
+    - name: remove php-pdo_sqlite
+      yum:
+        name: php-pdo_sqlite
+        state: absent
+##########################################################
+#  to install php modules you we have to download the repositores first and then enabled
+#  to list php modules installed type php --modules
+
+# notes:
+#   to see php modules: 
+#     dnf module list php
+# CentOS Linux 8 - AppStream
+# Name                   Stream                    Profiles                                     Summary                                 
+# php                    7.2 [d]                   common [d], devel, minimal                   PHP scripting language                  
+# php                    7.3                       common [d], devel, minimal                   PHP scripting language                  
+# php                    7.4                       common [d], devel, minimal                   PHP scripting language                  
+#   enable a module
+#     dnf list php
+#     sudo dnf module reset php:remi-7.2
+#     sudo dnf module enable php:remi-7.4
+      
+

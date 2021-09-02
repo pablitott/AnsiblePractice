@@ -1,0 +1,8 @@
+---
+- hosts: NextCloud
+  tasks:
+  - name: "update hostnames"
+    hostname:
+      name: "{{ item }}"
+    with_items:
+      - NextCloudServer.localnet

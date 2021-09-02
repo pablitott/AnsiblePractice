@@ -1,0 +1,42 @@
+php_to_install: "php:remi-7.4"
+module_to_install: 
+# Basic packages
+- php
+- php-gd
+- php-mbstring
+- php-intl            #  (increases language translation performance and fixes sorting of non-ASCII characters)
+- php-pecl-apcu
+- php-mysqlnd
+- php-opcache
+- php-json
+- php-zip
+- php-redis
+- php-imagick
+# full packages list, (not ll are necessary, depends of the NextCloud requirements)
+- php-ctype
+- php-curl
+- php-dom
+- php-fpm     # required only for magela  and FreeBSD
+- php-hash    # Only fro FreeBSD
+- php-iconv
+- php-libxml
+- php-openssl
+- php-posix
+- php-session
+- php-simplexml
+- php-xmlreader
+- php-xmlwriter
+- php-zlib
+- php-bcmath
+- php-fileinfo
+- php-gmp
+- php-xml
+- php-pdo_mysql       # for MariaDB and MySql
+- epel-release        # pre-requisite for imagick
+# recomended packages
+- php-bz2             #   (recommended, required for extraction of apps)
+# - php-smbclient     # (SMB/CIFS integration, see SMB/CIFS)   
+                      ## Can't be installed with this method
+- php-apcu >= 4.0.6   # For enhanced server performance (optional) select one of the following memcaches:
+# Not recomended
+#- php-pdo_sqlite >= 3  # not recomended for performance reasons

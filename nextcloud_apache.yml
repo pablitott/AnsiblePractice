@@ -1,0 +1,45 @@
+---
+-
+  become: true
+  hosts: NextCloudServer
+  tasks:
+    - name: Install nextcloud packages
+      dnf:
+        name: epel-release,yum-utils,unzip,curl,wget,bash-completion,policycoreutils-python-utils,mlocate,bzip2,ufw
+        state: latest
+    - name: Update all packages installed to the latest version available, this task may take several minutes (be patient)
+      yum:
+        name: "*"
+        state: latest
+    - name: install apache and httpd
+      yum: 
+        name: httpd,httpd-devel
+        state: present
+    - name: update to the latest version of apache and httpd
+      yum:
+        name: httpd
+        state: latest
+    - name: enable ufw
+      ufw:
+        state: enabled
+        policy: allow
+
+    - name: Configure open ports with ufw.
+      ufw:
+        rule: "{{ item.rule }}"
+        port: "{{ item.port }}"
+        proto: "{{ item.proto }}"
+      with_items:
+        - { rule: 'allow', port: 22, proto: 'tcp' }
+        - { rule: 'allow', port: 80, proto: 'tcp' }
+        - { rule: 'allow', port: 443, proto: 'tcp' }
+    - name: Configure default incoming/outgoing rules with ufw.
+      ufw:
+        direction: "{{ item.direction }}"
+        policy: "{{ item.policy }}"
+        state: enabled
+      with_items:
+        - { direction: outgoing, policy: allow }
+        - { direction: incoming, policy: deny }
+
+

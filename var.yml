@@ -1,0 +1,17 @@
+---
+-
+  become: true
+  hosts: NextCloudServer
+  vars_files:
+    - nextcloud_vars.yml
+  tasks:
+    - name: Server Linux Distribution installed
+      debug: msg="{{  ansible_distribution }} - {{ ansible_distribution_major_version }}"
+
+    - name: verify which php is installed
+      shell:
+        cmd: php -m
+      register: php_modules
+
+    - name: print out php modules installed
+      debug: msg="{{ php_modules }}"

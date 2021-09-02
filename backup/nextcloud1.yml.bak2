@@ -1,0 +1,81 @@
+---
+-
+  become: true
+  hosts: NextCloudServer
+  vars_files:
+    - nextcloud_vars.yml
+  tasks:
+    - name: Server Linux Distribution installed
+      debug: msg="{{  ansible_distribution }} - {{ ansible_distribution_major_version }}"
+    - name:
+      debug: msg="Ansible Major Distribution:{{ ansible_distribution_major_version }}"
+    - name: verify which php is installed
+      register: yum_package
+      yum:
+        list: php-modules
+
+    - name: print out packages installed
+      debug: msg="Package installed {{ yum_package }}"
+
+    - name: Install php NextCloud pre-requisites
+      yum:
+        name: "{{ module }}"
+        state: latest
+      #with_items:
+
+    - name: Install repositories epel and remi repo
+      dnf:
+        name: "{{ item }}"
+        state: present
+      with_items:
+      - https://dl.fedoraproject.org/pub/epel/epel-release-latest-{{ ansible_distribution_major_version }}.noarch.rpm
+      - http://rpms.famillecollet.com/enterprise/remi-release-{{ ansible_distribution_major_version }}.rpm
+
+    - name: List modules php:remi-7.4 using shell command
+      shell:
+        cmd: dnf module list php -y
+        # this command must be run in a shell because 
+        # command_warnings: False
+
+    - name: reset php:7.2 using shell command
+      shell:
+        cmd: dnf module reset -y php
+        # this command must be run in a shell because 
+        # command_warnings: False
+
+    - name: enable Module php 7.4 using shell command
+      shell:
+        cmd: dnf module enable -y php:7.4
+        # enablerepo: php:7.4
+
+    - name: install php from php-7.4 repo remi ans epel
+      yum:
+        name: php
+        state: latest
+
+    - name: install php modules version 7.4
+      yum:
+        name: "{{ module }}"
+        state: present
+    - name: remove php-pdo_sqlite
+      yum:
+        name: php-pdo_sqlite
+        state: absent
+##########################################################
+#  to install php modules you we have to download the repositores first and then enabled
+#  to list php modules installed type php --modules
+
+# notes:
+#   to see php modules: 
+#     dnf module list php
+# CentOS Linux 8 - AppStream
+# Name                   Stream                    Profiles                                     Summary                                 
+# php                    7.2 [d]                   common [d], devel, minimal                   PHP scripting language                  
+# php                    7.3                       common [d], devel, minimal                   PHP scripting language                  
+# php                    7.4                       common [d], devel, minimal                   PHP scripting language                  
+#   enable a module
+#     dnf list php
+#     sudo dnf module reset php:remi-7.2
+#     sudo dnf module enable php:remi-7.4
+      
+
